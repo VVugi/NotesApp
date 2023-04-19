@@ -9,23 +9,16 @@ import "react-mde/lib/styles/css/react-mde-all.css";
 
 export default function App()
 {
-   /**
-    * Challenge:
-    * 1. Every time the `notes` array changes, save it 
-    *    in localStorage. You'll need to use JSON.stringify()
-    *    to turn the array into a string to save in localStorage.
-    * 2. When the app first loads, initialize the notes state
-    *    with the notes saved in localStorage. You'll need to
-    *    use JSON.parse() to turn the stringified array back
-    *    into a real JS array.
-    */
+   const [notes, setNotes] = React.useState(
+      () => JSON.parse(localStorage.getItem("notes")) || []);
 
-   const [notes, setNotes] = React.useState(JSON.parse(localStorage.getItem("notes")) || []);
    const [currentNoteId, setCurrentNoteId] = React.useState(
       (notes[0] && notes[0].id) || ""
    );
 
    useEffect(() => {
+      console.log(notes);
+
       localStorage.setItem("notes", JSON.stringify(notes));
    });
    
@@ -39,18 +32,47 @@ export default function App()
       setNotes(prevNotes => [newNote, ...prevNotes]);
       setCurrentNoteId(newNote.id);
    }
-
-   console.log(localStorage.getItem("1"));
    
    function updateNote(text)
    {
-      setNotes(oldNotes => oldNotes.map(oldNote => {
-         return oldNote.id === currentNoteId
-               ? { ...oldNote, body: text }
-               : oldNote
-      }))
+      setNotes(oldNotes => {
+         let newNotes = [];
+         
+         for(let i = 0; i < oldNotes.length; i++)
+         {
+            if(oldNotes[i].id == currentNoteId)
+            {
+               newNotes.unshift({...oldNotes[i], body: text});
+            }
+            else
+            {
+               newNotes.push(oldNotes[i]);
+            }
+         };
+
+         return newNotes;
+      });
    }
-   
+
+   /**
+       * Challenge: complete and implement the deleteNote function
+       * 
+       * Hints: 
+       * 1. What array method can be used to return a new
+       *    array that has filtered out an item based 
+       *    on a condition?
+       * 2. Notice the parameters being based to the function
+       *    and think about how both of those parameters
+       *    can be passed in during the onClick event handler
+       */
+      
+   function deleteNote(event, noteId)
+   {
+      event.stopPropagation();
+      
+      setNotes(oldNotes => oldNotes.filter(note => note.id != noteId));
+   }
+
    function findCurrentNote()
    {
       return notes.find(note => {
@@ -73,6 +95,7 @@ export default function App()
                   currentNote={findCurrentNote()}
                   setCurrentNoteId={setCurrentNoteId}
                   newNote={createNewNote}
+                  deleteNote={deleteNote}
                />
 
                {
